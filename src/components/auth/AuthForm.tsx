@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { firebaseAuth } from "@/services/auth/firebase";
 import { useAuth } from "./AuthProvider";
 
@@ -29,8 +29,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         router.push("/dashboard");
       } else if (mode === "signup") {
         const credential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-        await sendEmailVerification(credential.user);
-        setMessage("Account created. Check your email to verify your address.");
+        router.push("/dashboard");
       } else {
         await sendPasswordResetEmail(firebaseAuth, email);
         setMessage("Password reset instructions have been sent.");

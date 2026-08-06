@@ -12,6 +12,8 @@
     "check": "npm run typecheck && npm run lint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.2",
     "firebase": "11.4.0",
     "next": "^15.5.21",
     "react": "19.0.0",
