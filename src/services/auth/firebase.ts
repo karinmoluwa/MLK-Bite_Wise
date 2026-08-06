@@ -11,8 +11,10 @@ export function getFirebaseApp() {
 
 export function getFirebaseAuth() {
   const app = getFirebaseApp();
-  export const firebaseAuth = getAuth(app);
+  return app ? getAuth(app) : null;
 }
+
+export const firebaseAuth = getFirebaseAuth();
 
 export function getFirebaseDatabase() {
   const app = getFirebaseApp();
