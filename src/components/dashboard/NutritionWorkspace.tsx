@@ -99,7 +99,7 @@ export function NutritionWorkspace() {
     onLog={() => setView("log")}
     onPick={chooseCandidate}
   />
-)}  />}
+)} 
 
       {view === "log" && <MealLogger method={method} setMethod={setMethod} cuisine={cuisine} setCuisine={setCuisine} suggestions={suggestions} runAnalysis={runAnalysis} chooseCandidate={chooseCandidate} voiceSupported={voiceSupported} voiceExampleSeen={voiceExampleSeen} setVoiceExampleSeen={setVoiceExampleSeen} />}
 
