@@ -20,11 +20,12 @@ const initialReminders = [
   { id: 3, title: "Log your lunch", text: "Keeping a complete record improves your weekly insights." },
 ];
 
-const initialNotifications = [
-  { id: 1, title: "New nutritionist message", text: "Ada left feedback on yesterday’s dinner.", unread: true },
-  { id: 2, title: "Meal reminder", text: "Would you like to log breakfast?", unread: true },
-  { id: 3, title: "Weekly recommendation", text: "Your fibre intake is improving.", unread: false },
-];
+const initialNotifications: {
+  id: number;
+  title: string;
+  text: string;
+  unread: boolean;
+}[] = [];
 
 export function NutritionWorkspace() {
   const [view, setView] = useState<View>("dashboard");
@@ -42,8 +43,10 @@ export function NutritionWorkspace() {
   const [status, setStatus] = useState("");
 
   const searchResults = useMemo(() => query.trim().length < 2 ? [] : commonMeals.filter((meal) => meal.name.toLowerCase().includes(query.toLowerCase())).slice(0, 5), [query]);
-  const consumed = 1460;
-  const goal = 2100;
+const consumed = savedMeals.reduce(
+  (total, meal) => total + meal.nutrients.calories,
+  0
+);  const goal = 2100;
   const remaining = goal - consumed;
   const caloriePercent = Math.round((consumed / goal) * 100);
 
