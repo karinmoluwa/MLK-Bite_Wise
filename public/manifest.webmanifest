@@ -1,0 +1,13 @@
+{
+  "name": "Bite Wise Nutrition",
+  "short_name": "Bite Wise",
+  "description": "AI-assisted nutrition tracking with culturally relevant meal guidance.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#f7fbf8",
+  "theme_color": "#16794b",
+  "icons": [
+    {"src":"/icons/icon-192.svg","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"/icons/icon-512.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
