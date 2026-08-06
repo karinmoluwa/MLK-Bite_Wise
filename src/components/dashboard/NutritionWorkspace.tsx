@@ -77,8 +77,10 @@ export function NutritionWorkspace() {
 
       {view === "dashboard" && <Dashboard
         caloriePercent={caloriePercent} consumed={consumed} goal={goal} remaining={remaining} macro={macro} setMacro={setMacro}
-        reminders={reminders} dismissReminder={(id) => setReminders((items) => items.filter((item) => item.id !== id))}
-        notifications={notifications} markRead={(id) => setNotifications((items) => items.map((item) => item.id === id ? { ...item, unread: false } : item))}
+        reminders={reminders} dismissReminder={(id: string) =>
+  setReminders((items) => items.filter((item) => item.id !== id))
+}
+        notifications={notifications} markRead={(id: string) => setNotifications((items) => items.map((item) => item.id === id ? { ...item, unread: false } : item))}
         cuisine={cuisine} onLog={() => setView("log")} onPick={chooseCandidate}
       />}
 
