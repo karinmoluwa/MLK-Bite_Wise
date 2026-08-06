@@ -113,3 +113,16 @@ NEXT_PUBLIC_DEMO_MODE=false
 ```
 
 Never commit `.env.local`.
+
+## Commercial-readiness upgrade
+
+This repository now includes a stricter deployment quality gate, security headers, Firebase rules and indexes, storage upload restrictions, global loading/error states, a health endpoint, pinned Node/npm engines, and emulator configuration.
+
+Run before every deployment:
+
+```bash
+npm ci
+npm run verify
+```
+
+The Firebase rules are a secure baseline and must be reviewed against the final production data model before launch. A successful build does not by itself certify medical, privacy, security, or regulatory compliance.

@@ -629,3 +629,5 @@ button { cursor: pointer; }
 .auth-form input:focus{outline:3px solid rgba(22,121,75,.24);border-color:#16794b}
 .form-message{padding:.8rem 1rem;border-radius:12px;background:#eef8f2;color:#174d34}
 @media (display-mode:standalone){body{overscroll-behavior-y:contain}}
+
+.error-state,.loading-state{min-height:55vh;display:grid;place-content:center;text-align:center;gap:1rem;padding:2rem}.loading-spinner{width:42px;height:42px;border:4px solid #dcece4;border-top-color:#176f45;border-radius:50%;animation:bw-spin .8s linear infinite;margin:auto}@keyframes bw-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.loading-spinner{animation:none}}

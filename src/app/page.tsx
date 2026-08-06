@@ -1,4 +1,3 @@
-import { ProtectedPage } from "@/components/auth/ProtectedPage";
-import { AppShell } from "@/components/app-shell/AppShell";
-import { Part2Workspace } from "@/components/part2/Part2Workspace";
-export default function SettingsPage(){return <ProtectedPage><AppShell><Part2Workspace/></AppShell></ProtectedPage>}
+import Link from "next/link";
+import { AuthForm } from "@/components/auth/AuthForm";
+export default function SignupPage(){return <main className="standalone-page"><AuthForm mode="signup"/><p><Link href="/login">Already registered? Sign in</Link></p></main>}
