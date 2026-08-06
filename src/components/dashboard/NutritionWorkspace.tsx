@@ -14,11 +14,11 @@ const macroData: Record<MacroKey, { current: number; goal: number; unit: string;
   Fat: { current: 54, goal: 70, unit: "g", colour: "#4f78a8" },
 };
 
-const initialReminders = [
-  { id: 1, title: "Complete your nutrition profile", text: "Add your allergies and preferences for safer recommendations." },
-  { id: 2, title: "Drink some water", text: "You are 3 glasses away from today’s hydration goal." },
-  { id: 3, title: "Log your lunch", text: "Keeping a complete record improves your weekly insights." },
-];
+const initialReminders: {
+  id: number;
+  title: string;
+  text: string;
+}[] = [];
 
 const initialNotifications: {
   id: number;
@@ -95,7 +95,297 @@ const consumed = savedMeals.reduce(
   );
 }
 
-function Dashboard(props: any) {
+function Dashboard(props: any) {function Dashboard(props: any) {
+  const macroInfo = macroData[props.macro as MacroKey];
+  const circumference = 2 * Math.PI * 54;
+  const offset =
+    circumference - (props.caloriePercent / 100) * circumference;
+
+  return (
+    <div className="dashboard-content">
+      <div className="dashboard-title">
+        <div>
+          <span className="eyebrow">Daily overview</span>
+          <h1>Your nutrition at a glance</h1>
+          <p>
+            Your dashboard will update as you log meals and complete your
+            profile.
+          </p>
+        </div>
+
+        <button className="button button-primary" onClick={props.onLog}>
+          + Log a meal
+        </button>
+      </div>
+
+      {props.consumed === 0 ? (
+        <section className="dashboard-card">
+          <h2>No meals logged yet</h2>
+          <p>
+            Log your first meal to begin seeing calories, nutrition statistics,
+            insights, and recommendations.
+          </p>
+          <button className="button button-primary" onClick={props.onLog}>
+            Log your first meal
+          </button>
+        </section>
+      ) : (
+        <>
+          <div className="dashboard-primary-grid">
+            <article className="dashboard-card calorie-card">
+              <div>
+                <span className="card-kicker">Daily nutrition</span>
+                <h2>Calories</h2>
+                <p>Calculated from the meals you have logged.</p>
+              </div>
+
+              <div className="calorie-gauge">
+                <svg
+                  viewBox="0 0 128 128"
+                  role="img"
+                  aria-label={`${props.caloriePercent}% of calorie goal consumed`}
+                >
+                  <circle
+                    cx="64"
+                    cy="64"
+                    r="54"
+                    className="gauge-track"
+                  />
+                  <circle
+                    cx="64"
+                    cy="64"
+                    r="54"
+                    className="gauge-progress"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={offset}
+                  />
+                </svg>
+
+                <div>
+                  <strong>{props.consumed.toLocaleString()}</strong>
+                  <span>kcal consumed</span>
+                </div>
+              </div>
+
+              <div className="calorie-summary">
+                <span>
+                  <strong>{props.remaining}</strong> remaining
+                </span>
+                <span>
+                  <strong>{props.goal.toLocaleString()}</strong> daily goal
+                </span>
+              </div>
+            </article>
+
+            <article className="dashboard-card macro-card">
+              <div className="card-heading">
+                <div>
+                  <span className="card-kicker">Macronutrients</span>
+                  <h2>Today’s distribution</h2>
+                </div>
+              </div>
+
+              <div className="macro-layout">
+                <div
+                  className="macro-pie"
+                  role="img"
+                  aria-label="Macronutrient distribution"
+                >
+                  <span>
+                    Daily
+                    <br />
+                    mix
+                  </span>
+                </div>
+
+                <div className="macro-buttons">
+                  {Object.entries(macroData).map(([name, item]) => (
+                    <button
+                      key={name}
+                      className={props.macro === name ? "is-selected" : ""}
+                      onMouseEnter={() => props.setMacro(name)}
+                      onClick={() => props.setMacro(name)}
+                    >
+                      <i style={{ background: item.colour }} />
+                      <span>{name}</span>
+                      <strong>
+                        {item.current}
+                        {item.unit}
+                      </strong>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="macro-detail">
+                <strong>{props.macro}</strong>
+                <span>
+                  Current {macroInfo.current}
+                  {macroInfo.unit}
+                </span>
+                <span>
+                  Recommended {macroInfo.goal}
+                  {macroInfo.unit}
+                </span>
+                <span>
+                  Remaining {macroInfo.goal - macroInfo.current}
+                  {macroInfo.unit}
+                </span>
+              </div>
+            </article>
+          </div>
+
+          <section>
+            <div className="section-heading">
+              <div>
+                <span className="eyebrow">Quick statistics</span>
+                <h2>Today’s activity</h2>
+              </div>
+            </div>
+
+            <div className="stats-grid">
+              <article className="stat-card">
+                <span>Calories consumed</span>
+                <strong>{props.consumed} kcal</strong>
+                <p>Calculated from your logged meals</p>
+              </article>
+
+              <article className="stat-card">
+                <span>Remaining calories</span>
+                <strong>{props.remaining} kcal</strong>
+                <p>Based on your current daily goal</p>
+              </article>
+            </div>
+          </section>
+
+          <div className="dashboard-secondary-grid">
+            <section className="dashboard-card">
+              <div className="section-heading compact">
+                <div>
+                  <span className="eyebrow">Nutrition insights</span>
+                  <h2>Insights</h2>
+                </div>
+              </div>
+
+              <p className="empty-message">
+                More detailed insights will appear as you continue logging
+                meals.
+              </p>
+            </section>
+
+            <section className="dashboard-card">
+              <div className="section-heading compact">
+                <div>
+                  <span className="eyebrow">Recommended meals</span>
+                  <h2>Ideas that fit your day</h2>
+                </div>
+              </div>
+
+              <div className="meal-recommendations">
+                {commonMeals
+                  .filter((meal) =>
+                    props.cuisine === "Nigerian Cuisine"
+                      ? ["jollof-chicken", "moi-moi", "egusi"].includes(meal.id)
+                      : [
+                          "chicken-bowl",
+                          "chicken-salad",
+                          "pasta-chicken",
+                        ].includes(meal.id)
+                  )
+                  .slice(0, 3)
+                  .map((meal) => (
+                    <button
+                      key={meal.id}
+                      onClick={() => props.onPick(meal)}
+                    >
+                      <span className="meal-thumb" aria-hidden="true">
+                        {meal.name.slice(0, 2).toUpperCase()}
+                      </span>
+
+                      <span>
+                        <strong>{meal.name}</strong>
+                        <small>
+                          {meal.nutrients.calories} kcal ·{" "}
+                          {meal.nutrients.protein}g protein
+                        </small>
+                      </span>
+
+                      <b>+</b>
+                    </button>
+                  ))}
+              </div>
+            </section>
+          </div>
+        </>
+      )}
+
+      <div className="dashboard-secondary-grid">
+        <section className="dashboard-card">
+          <div className="section-heading compact">
+            <div>
+              <span className="eyebrow">Reminders</span>
+              <h2>Helpful next steps</h2>
+            </div>
+          </div>
+
+          {props.reminders.length ? (
+            <div className="reminder-list">
+              {props.reminders.map((item: any) => (
+                <div key={item.id}>
+                  <span aria-hidden="true">✓</span>
+
+                  <p>
+                    <strong>{item.title}</strong>
+                    <small>{item.text}</small>
+                  </p>
+
+                  <button
+                    onClick={() => props.dismissReminder(item.id)}
+                    aria-label={`Dismiss ${item.title}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="empty-message">No reminders yet.</p>
+          )}
+        </section>
+
+        <section className="dashboard-card">
+          <div className="section-heading compact">
+            <div>
+              <span className="eyebrow">Notifications</span>
+              <h2>Recent updates</h2>
+            </div>
+          </div>
+
+          {props.notifications.length ? (
+            <div className="notification-list">
+              {props.notifications.map((item: any) => (
+                <button
+                  key={item.id}
+                  className={item.unread ? "unread" : ""}
+                  onClick={() => props.markRead(item.id)}
+                >
+                  <span className="notification-dot" />
+
+                  <span>
+                    <strong>{item.title}</strong>
+                    <small>{item.text}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="empty-message">No notifications yet.</p>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
   const macroInfo = macroData[props.macro as MacroKey];
   const circumference = 2 * Math.PI * 54;
   const offset = circumference - (props.caloriePercent / 100) * circumference;
@@ -106,10 +396,62 @@ function Dashboard(props: any) {
       <article className="dashboard-card macro-card"><div className="card-heading"><div><span className="card-kicker">Macronutrients</span><h2>Today’s distribution</h2></div></div><div className="macro-layout"><div className="macro-pie" role="img" aria-label="Macronutrient distribution"><span>Daily<br/>mix</span></div><div className="macro-buttons">{Object.entries(macroData).map(([name, item]) => <button key={name} className={props.macro === name ? "is-selected" : ""} onMouseEnter={() => props.setMacro(name)} onClick={() => props.setMacro(name)}><i style={{background:item.colour}}/><span>{name}</span><strong>{item.current}{item.unit}</strong></button>)}</div></div><div className="macro-detail"><strong>{props.macro}</strong><span>Current {macroInfo.current}{macroInfo.unit}</span><span>Recommended {macroInfo.goal}{macroInfo.unit}</span><span>Remaining {macroInfo.goal - macroInfo.current}{macroInfo.unit}</span></div></article>
       <article className="dashboard-card bmi-card"><span className="card-kicker">BMI summary</span><div className="bmi-value"><strong>23.4</strong><span>Healthy range</span></div><p>BMI is a general health indicator and does not account for muscle mass or overall body composition.</p></article>
     </div>
-    <section><div className="section-heading"><div><span className="eyebrow">Quick statistics</span><h2>Today’s activity</h2></div></div><div className="stats-grid">{[["Meals logged","3","Breakfast, snack and lunch"],["Remaining calories",`${props.remaining} kcal`,"Available for today"],["Calories burned","310 kcal","Walking and daily movement"],["Water intake","5 / 8","Glasses completed"],["Current goal","Maintain","Weight maintenance plan"]].map(([label,value,text])=><article className="stat-card" key={label}><span>{label}</span><strong>{value}</strong><p>{text}</p></article>)}</div></section>
-    <div className="dashboard-secondary-grid">
-      <section className="dashboard-card"><div className="section-heading compact"><div><span className="eyebrow">Nutrition insights</span><h2>Positive progress</h2></div></div><div className="insight-list">{["Your protein intake has improved this week.","Consider adding vegetables or fruit at dinner for more fibre.","Your calorie intake has remained consistent over the last seven days."].map((text,i)=><div key={text}><span>{i+1}</span><p>{text}</p></div>)}</div></section>
-      <section className="dashboard-card"><div className="section-heading compact"><div><span className="eyebrow">Recommended meals</span><h2>Ideas that fit your day</h2></div></div><div className="meal-recommendations">{commonMeals.filter(m=>props.cuisine === "Nigerian Cuisine" ? ["jollof-chicken","moi-moi","egusi"].includes(m.id) : ["chicken-bowl","chicken-salad","pasta-chicken"].includes(m.id)).slice(0,3).map(meal=><button key={meal.id} onClick={()=>props.onPick(meal)}><span className="meal-thumb" aria-hidden="true">{meal.name.slice(0,2).toUpperCase()}</span><span><strong>{meal.name}</strong><small>{meal.nutrients.calories} kcal · {meal.nutrients.protein}g protein</small></span><b>+</b></button>)}</div></section>
+<section>
+  <div className="section-heading">
+    <div>
+      <span className="eyebrow">Quick statistics</span>
+      <h2>Today’s activity</h2>
+    </div>
+  </div>
+
+  {props.consumed === 0 ? (
+    <div className="dashboard-card">
+      <h3>No activity yet</h3>
+      <p>Log your first meal to start seeing daily nutrition statistics.</p>
+    </div>
+  ) : (
+    <div className="stats-grid">
+      <article className="stat-card">
+        <span>Meals logged</span>
+        <strong>{props.consumed}</strong>
+        <p>Meals logged today</p>
+      </article>
+
+      <article className="stat-card">
+        <span>Calories consumed</span>
+        <strong>{props.consumed} kcal</strong>
+        <p>Calculated from your logged meals</p>
+      </article>
+
+      <article className="stat-card">
+        <span>Remaining calories</span>
+        <strong>{props.remaining} kcal</strong>
+        <p>Based on your daily goal</p>
+      </article>
+    </div>
+  )}
+</section>    <div className="dashboard-secondary-grid">
+<section className="dashboard-card">
+  <div className="section-heading compact">
+    <div>
+      <span className="eyebrow">Nutrition insights</span>
+      <h2>Insights will appear here</h2>
+    </div>
+  </div>
+
+  {props.consumed === 0 ? (
+    <p className="empty-message">
+      Log meals to receive nutrition insights based on your actual activity.
+    </p>
+  ) : (
+    <div className="insight-list">
+      <div>
+        <span>1</span>
+        <p>Your insights will be calculated from your logged meals.</p>
+      </div>
+    </div>
+  )}
+</section>      <section className="dashboard-card"><div className="section-heading compact"><div><span className="eyebrow">Recommended meals</span><h2>Ideas that fit your day</h2></div></div><div className="meal-recommendations">{commonMeals.filter(m=>props.cuisine === "Nigerian Cuisine" ? ["jollof-chicken","moi-moi","egusi"].includes(m.id) : ["chicken-bowl","chicken-salad","pasta-chicken"].includes(m.id)).slice(0,3).map(meal=><button key={meal.id} onClick={()=>props.onPick(meal)}><span className="meal-thumb" aria-hidden="true">{meal.name.slice(0,2).toUpperCase()}</span><span><strong>{meal.name}</strong><small>{meal.nutrients.calories} kcal · {meal.nutrients.protein}g protein</small></span><b>+</b></button>)}</div></section>
     </div>
     <div className="dashboard-secondary-grid">
       <section className="dashboard-card"><div className="section-heading compact"><div><span className="eyebrow">Reminders</span><h2>Helpful next steps</h2></div></div>{props.reminders.length ? <div className="reminder-list">{props.reminders.map((item:any)=><div key={item.id}><span aria-hidden="true">✓</span><p><strong>{item.title}</strong><small>{item.text}</small></p><button onClick={()=>props.dismissReminder(item.id)} aria-label={`Dismiss ${item.title}`}>×</button></div>)}</div>:<p className="empty-message">You are all caught up. Nice work.</p>}</section>
@@ -134,7 +476,6 @@ function MealConfirmation({meal,setMeal,alternatives,onCancel,onSave}:{meal:Meal
   return <div className="confirmation-page"><div className="dashboard-title"><div><span className="eyebrow">Meal confirmation</span><h1>Review before saving</h1><p>No meal is stored until you explicitly confirm it.</p></div></div><div className="confirmation-grid"><section className="dashboard-card meal-review"><div className="meal-review-image">{meal.name.slice(0,2).toUpperCase()}</div><div><span className="card-kicker">Detected meal</span><input className="meal-name-input" value={meal.name} onChange={e=>setMeal({...meal,name:e.target.value})}/><p>{meal.estimated?"Nutrition values are estimated because an exact USDA match was unavailable.":"Nutrition values use the closest USDA FoodData Central match."}</p><label>Serving multiplier<input type="number" min="0.25" step="0.25" value={servings} onChange={e=>setServings(Number(e.target.value)||1)}/></label></div></section><aside className="dashboard-card nutrition-summary"><span className="card-kicker">Nutritional summary</span><strong className="calorie-total">{Math.round(meal.nutrients.calories*servings)} kcal</strong>{[["Protein",meal.nutrients.protein],["Carbohydrates",meal.nutrients.carbohydrates],["Fat",meal.nutrients.fat],["Fibre",meal.nutrients.fibre]].map(([label,value])=><div key={label}><span>{label}</span><strong>{Math.round(Number(value)*servings)} g</strong></div>)}<div><span>Confidence</span><strong>{meal.confidence}%</strong></div></aside></div><div className="safety-summary"><div><strong>Detected allergens</strong><span>{meal.allergens.length?meal.allergens.join(", "):"None detected"}</span></div><div><strong>Food intolerances</strong><span>{meal.intolerances.length?meal.intolerances.join(", "):"None detected"}</span></div></div>{alternatives.length>1&&<div className="alternative-strip"><strong>Select another AI suggestion</strong><div>{alternatives.filter(a=>a.id!==meal.id).map(a=><button key={a.id} onClick={()=>setMeal(a)}>{a.name}</button>)}</div></div>}<div className="confirmation-actions"><button className="button button-secondary" onClick={onCancel}>Cancel</button><button className="button button-secondary" onClick={()=>setMeal({...meal,name:meal.name})}>Edit meal</button><button className="button button-primary" onClick={onSave}>Confirm and save</button></div></div>;
 }
 function Favourites({savedMeals,setSavedMeals,chooseCandidate}:{savedMeals:SavedMeal[];setSavedMeals:Dispatch<SetStateAction<SavedMeal[]>>;chooseCandidate:(m:MealCandidate)=>void}) {
-  const defaults=commonMeals.slice(0,3).map((m,i)=>({...m,source:"favourite" as const,savedAt:new Date().toISOString(),pinned:i===0}));
-  const items=savedMeals.length?savedMeals:defaults;
+  const items = savedMeals;
   return <div className="favourites-page"><div className="dashboard-title"><div><span className="eyebrow">Favourites</span><h1>Your fastest meals to log</h1><p>Pin, rename, remove, or review a meal before logging it again.</p></div></div>{["Pinned Meals","Frequently Logged Meals","Recent Meals"].map((section,index)=><section key={section}><div className="section-heading"><h2>{section}</h2></div><div className="favourite-grid">{items.filter((m)=>index!==0||m.pinned).slice(0,4).map((meal)=><article key={meal.id}><span className="meal-thumb">{meal.name.slice(0,2).toUpperCase()}</span><div><strong>{meal.name}</strong><small>{meal.nutrients.calories} kcal · {meal.serving}</small></div><div className="favourite-actions"><button onClick={()=>setSavedMeals((all:SavedMeal[])=>all.map(m=>m.id===meal.id?{...m,pinned:!m.pinned}:m))}>{meal.pinned?"Unpin":"Pin"}</button><button onClick={()=>chooseCandidate(meal)}>Log</button><button onClick={()=>setSavedMeals((all:SavedMeal[])=>all.filter(m=>m.id!==meal.id))}>Remove</button></div></article>)}</div></section>)}</div>;
 }
