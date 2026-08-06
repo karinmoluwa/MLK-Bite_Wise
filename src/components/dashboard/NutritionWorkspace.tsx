@@ -75,21 +75,43 @@ export function NutritionWorkspace() {
 
       {status && <div className="status-banner" role="status">{status}<button onClick={() => setStatus("")} aria-label="Dismiss message">×</button></div>}
 
-      {view === "dashboard" && <Dashboard
-        caloriePercent={caloriePercent} consumed={consumed} goal={goal} remaining={remaining} macro={macro} setMacro={setMacro}
-        reminders={reminders} dismissReminder={(id: number) =>
-  setReminders((items) => items.filter((item) => item.id !== id))
-}
-        notifications={notifications} markRead={(id: number) => setNotifications((items) => items.map((item) => item.id === id ? { ...item, unread: false } : item))}
-        cuisine={cuisine} onLog={() => setView("log")} onPick={chooseCandidate}
-      />}
+ {view === "dashboard" && (
+  <Dashboard
+    caloriePercent={caloriePercent}
+    consumed={consumed}
+    goal={goal}
+    remaining={remaining}
+    macro={macro}
+    setMacro={setMacro}
+    reminders={reminders}
+    dismissReminder={(id: number) =>
+      setReminders((items) => items.filter((item) => item.id !== id))
+    }
+    notifications={notifications}
+    markRead={(id: number) =>
+      setNotifications((items) =>
+        items.map((item) =>
+          item.id === id ? { ...item, unread: false } : item
+        )
+      )
+    }
+    cuisine={cuisine}
+    onLog={() => setView("log")}
+    onPick={chooseCandidate}
+  />
+)}  />}
 
       {view === "log" && <MealLogger method={method} setMethod={setMethod} cuisine={cuisine} setCuisine={setCuisine} suggestions={suggestions} runAnalysis={runAnalysis} chooseCandidate={chooseCandidate} voiceSupported={voiceSupported} voiceExampleSeen={voiceExampleSeen} setVoiceExampleSeen={setVoiceExampleSeen} />}
 
       {view === "confirm" && selected && <MealConfirmation meal={selected} setMeal={setSelected} alternatives={suggestions} onCancel={() => { setSelected(null); setView("log"); }} onSave={() => saveMeal()} />}
 
-      {view === "favourites" && <Favourites savedMeals={savedMeals} setSavedMeals={setSavedMeals} onLog={(meal) => { setSelected(meal); saveMeal("favourite", meal); }, 0} chooseCandidate={chooseCandidate} />}
-    </div>
+{view === "favourites" && (
+  <Favourites
+    savedMeals={savedMeals}
+    setSavedMeals={setSavedMeals}
+    chooseCandidate={chooseCandidate}
+  />
+)}    </div>
   );
 }
 
@@ -131,8 +153,15 @@ function MealConfirmation({meal,setMeal,alternatives,onCancel,onSave}:{meal:Meal
   const [servings,setServings]=useState(1);
   return <div className="confirmation-page"><div className="dashboard-title"><div><span className="eyebrow">Meal confirmation</span><h1>Review before saving</h1><p>No meal is stored until you explicitly confirm it.</p></div></div><div className="confirmation-grid"><section className="dashboard-card meal-review"><div className="meal-review-image">{meal.name.slice(0,2).toUpperCase()}</div><div><span className="card-kicker">Detected meal</span><input className="meal-name-input" value={meal.name} onChange={e=>setMeal({...meal,name:e.target.value})}/><p>{meal.estimated?"Nutrition values are estimated because an exact USDA match was unavailable.":"Nutrition values use the closest USDA FoodData Central match."}</p><label>Serving multiplier<input type="number" min="0.25" step="0.25" value={servings} onChange={e=>setServings(Number(e.target.value)||1)}/></label></div></section><aside className="dashboard-card nutrition-summary"><span className="card-kicker">Nutritional summary</span><strong className="calorie-total">{Math.round(meal.nutrients.calories*servings)} kcal</strong>{[["Protein",meal.nutrients.protein],["Carbohydrates",meal.nutrients.carbohydrates],["Fat",meal.nutrients.fat],["Fibre",meal.nutrients.fibre]].map(([label,value])=><div key={label}><span>{label}</span><strong>{Math.round(Number(value)*servings)} g</strong></div>)}<div><span>Confidence</span><strong>{meal.confidence}%</strong></div></aside></div><div className="safety-summary"><div><strong>Detected allergens</strong><span>{meal.allergens.length?meal.allergens.join(", "):"None detected"}</span></div><div><strong>Food intolerances</strong><span>{meal.intolerances.length?meal.intolerances.join(", "):"None detected"}</span></div></div>{alternatives.length>1&&<div className="alternative-strip"><strong>Select another AI suggestion</strong><div>{alternatives.filter(a=>a.id!==meal.id).map(a=><button key={a.id} onClick={()=>setMeal(a)}>{a.name}</button>)}</div></div>}<div className="confirmation-actions"><button className="button button-secondary" onClick={onCancel}>Cancel</button><button className="button button-secondary" onClick={()=>setMeal({...meal,name:meal.name})}>Edit meal</button><button className="button button-primary" onClick={onSave}>Confirm and save</button></div></div>;
 }
-function Favourites({savedMeals,setSavedMeals,chooseCandidate}:{savedMeals:SavedMeal[];setSavedMeals:any;onLog:(meal: Meal) => void;chooseCandidate:(m:MealCandidate)=>void}) {
-  const defaults=commonMeals.slice(0,3).map((m,i)=>({...m,source:"favourite" as const,savedAt:new Date().toISOString(),pinned:i===0}));
+function Favourites({
+  savedMeals,
+  setSavedMeals,
+  chooseCandidate,
+}: {
+  savedMeals: SavedMeal[];
+  setSavedMeals: React.Dispatch<React.SetStateAction<SavedMeal[]>>;
+  chooseCandidate: (meal: MealCandidate) => void;
+}) {  const defaults=commonMeals.slice(0,3).map((m,i)=>({...m,source:"favourite" as const,savedAt:new Date().toISOString(),pinned:i===0}));
   const items=savedMeals.length?savedMeals:defaults;
   return <div className="favourites-page"><div className="dashboard-title"><div><span className="eyebrow">Favourites</span><h1>Your fastest meals to log</h1><p>Pin, rename, remove, or review a meal before logging it again.</p></div></div>{["Pinned Meals","Frequently Logged Meals","Recent Meals"].map((section,index)=><section key={section}><div className="section-heading"><h2>{section}</h2></div><div className="favourite-grid">{items.filter((m)=>index!==0||m.pinned).slice(0,4).map((meal)=><article key={meal.id}><span className="meal-thumb">{meal.name.slice(0,2).toUpperCase()}</span><div><strong>{meal.name}</strong><small>{meal.nutrients.calories} kcal · {meal.serving}</small></div><div className="favourite-actions"><button onClick={()=>setSavedMeals((all:SavedMeal[])=>all.map(m=>m.id===meal.id?{...m,pinned:!m.pinned}:m))}>{meal.pinned?"Unpin":"Pin"}</button><button onClick={()=>chooseCandidate(meal)}>Log</button><button onClick={()=>setSavedMeals((all:SavedMeal[])=>all.filter(m=>m.id!==meal.id))}>Remove</button></div></article>)}</div></section>)}</div>;
 }
