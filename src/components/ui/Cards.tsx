@@ -1,0 +1,3 @@
+import type { ReactNode } from "react";
+export function Card({ title, eyebrow, children, className="" }: { title:string; eyebrow?:string; children:ReactNode; className?:string }) { return <article className={`dashboard-card ${className}`}>{eyebrow&&<span className="card-kicker">{eyebrow}</span>}<h3>{title}</h3>{children}</article>; }
+export function StatCard({ label, value, detail }: { label:string; value:string; detail:string }) { return <article className="metric-card dashboard-card"><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-detail">{detail}</span></article>; }
