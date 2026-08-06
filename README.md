@@ -1,2 +1,2 @@
 # MLK---Fuel-Freely
-This is a calorie counting app for Nigerian foods
+This is an AI-powered nutrition application for Nigerian foods
