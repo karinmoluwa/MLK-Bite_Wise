@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  getFirebaseAuth,
+  getFirebaseDatabase,
+} from "@/services/auth/firebase";
+
 import { NutritionWorkspace } from "@/components/dashboard/NutritionWorkspace";
 
 type Area =
@@ -116,6 +123,120 @@ export function Part2Workspace() {
     useState("Weekly recommendation");
   const [message, setMessage] = useState("");
   const [toast, setToast] = useState("");
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileSkipped, setProfileSkipped] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+ useEffect(() => {
+  const auth = getFirebaseAuth();
+  const db = getFirebaseDatabase();
+
+  if (!auth || !db) {
+    setProfileLoaded(true);
+    return;
+  }
+
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      setProfile(null);
+      setProfileLoaded(true);
+      return;
+    }
+
+    try {
+      const snapshot = await getDoc(
+        doc(db, "users", user.uid)
+      );
+
+      if (!snapshot.exists()) {
+        setProfile(null);
+        setProfileLoaded(true);
+        return;
+      }
+
+      const savedProfile = snapshot.data();
+
+      setProfile(savedProfile);
+
+      setDietary(
+        Array.isArray(savedProfile.dietaryPreferences)
+          ? savedProfile.dietaryPreferences
+          : []
+      );
+
+      setAllergies(
+        Array.isArray(savedProfile.allergies)
+          ? savedProfile.allergies.map((item: any) => ({
+              name: item.name,
+              severity:
+                item.severity === "severe"
+                  ? "Severe"
+                  : item.severity === "moderate"
+                  ? "Moderate"
+                  : "Mild",
+            }))
+          : []
+      );
+
+      setIntolerances(
+        Array.isArray(savedProfile.intolerances)
+          ? savedProfile.intolerances
+          : []
+      );
+
+      setProfileSkipped(
+        savedProfile.onboardingSkipped === true &&
+        savedProfile.onboardingComplete !== true
+      );
+    } catch {
+      setToast(
+        "We could not load your saved profile. Please refresh and try again."
+      );
+    } finally {
+      setProfileLoaded(true);
+    }
+  });
+
+  return unsubscribe;
+}, []);
+ const saveProfileSettings = async () => {
+  const auth = getFirebaseAuth();
+  const db = getFirebaseDatabase();
+  const user = auth?.currentUser;
+
+  if (!auth || !db || !user) {
+    setToast("Please sign in again before saving your settings.");
+    return;
+  }
+
+  try {
+    const updatedProfile = {
+      dietaryPreferences: dietary,
+      allergies: allergies.map((item) => ({
+        name: item.name,
+        severity: item.severity.toLowerCase(),
+      })),
+      intolerances,
+    };
+
+    await setDoc(
+      doc(db, "users", user.uid),
+      updatedProfile,
+      { merge: true }
+    );
+
+    setProfile((current: any) => ({
+      ...(current || {}),
+      ...updatedProfile,
+    }));
+
+    setDialog(null);
+    setToast("Settings saved successfully.");
+  } catch {
+    setToast(
+      "We could not save your settings. Please try again."
+    );
+  }
+ };
 
   const visibleClients = useMemo(() => {
     const filtered =
@@ -205,7 +326,28 @@ export function Part2Workspace() {
           </select>
         </label>
       </div>
+       {profileSkipped && (
+  <div className="status-banner">
+    <span>
+      Complete your nutrition profile to improve recommendations and safety checks.
+    </span>
 
+    <button
+      type="button"
+      className="button button-secondary"
+      onClick={() => {
+        window.location.href = "/onboarding";
+      }}
+    >
+      Complete profile
+    </button>
+  </div>
+  )}
+  {!profileLoaded && (
+  <div className="dashboard-card">
+    <p>Loading your profile...</p>
+  </div>
+ )}
       {toast && (
         <div className="status-banner" role="status">
           {toast}
@@ -216,82 +358,84 @@ export function Part2Workspace() {
           >
             ×
           </button>
-        </div>
-      )}
+  </div>
+)}
+ {profileLoaded && area === "nutrition" && (
+  <NutritionWorkspace />
+)}
 
-      {area === "nutrition" && <NutritionWorkspace />}
+{profileLoaded &&
+  area === "nutritionist" &&
+  (role === "nutritionist" ? (
+    <NutritionistDashboard
+      clients={visibleClients}
+      sort={sort}
+      setSort={setSort}
+      filter={filter}
+      setFilter={setFilter}
+      messageType={messageType}
+      setMessageType={setMessageType}
+      message={message}
+      setMessage={setMessage}
+      send={() => {
+        if (!message.trim()) return;
 
-      {area === "nutritionist" &&
-        (role === "nutritionist" ? (
-          <NutritionistDashboard
-            clients={visibleClients}
-            sort={sort}
-            setSort={setSort}
-            filter={filter}
-            setFilter={setFilter}
-            messageType={messageType}
-            setMessageType={setMessageType}
-            message={message}
-            setMessage={setMessage}
-            send={() => {
-              if (!message.trim()) return;
+        setToast("Guidance sent successfully.");
+        setMessage("");
+      }}
+    />
+  ) : (
+    <NutritionistConnection
+      connected={connected}
+      method={connectionMethod}
+      setMethod={setConnectionMethod}
+      value={connectionValue}
+      setValue={setConnectionValue}
+      connect={() =>
+        setDialog(
+          connected ? "disconnect" : "connect"
+        )
+      }
+    />
+  ))}
 
-              setToast("Guidance sent successfully.");
-              setMessage("");
-            }}
-          />
-        ) : (
-          <NutritionistConnection
-            connected={connected}
-            method={connectionMethod}
-            setMethod={setConnectionMethod}
-            value={connectionValue}
-            setValue={setConnectionValue}
-            connect={() =>
-              setDialog(
-                connected ? "disconnect" : "connect"
-              )
-            }
-          />
-        ))}
+{profileLoaded && area === "client" && (
+  <ClientProfile
+    profile={profile}
+    privacy={privacy}
+    allergies={allergies}
+    intolerances={intolerances}
+    dietary={dietary}
+    role={role}
+  />
+)}
+{profileLoaded && area === "insights" && (
+  <Insights simplified={simplified} />
+)}
 
-      {area === "client" && (
-        <ClientProfile
-          privacy={privacy}
-          allergies={allergies}
-          intolerances={intolerances}
-          dietary={dietary}
-          role={role}
-        />
-      )}
-
-      {area === "insights" && (
-        <Insights simplified={simplified} />
-      )}
-
-      {area === "settings" && (
-        <Settings
-          connected={connected}
-          simplified={simplified}
-          setSimplified={setSimplified}
-          dietary={dietary}
-          setDietary={setDietary}
-          allergies={allergies}
-          setAllergies={setAllergies}
-          intolerances={intolerances}
-          setIntolerances={setIntolerances}
-          notifications={notifications}
-          setNotifications={setNotifications}
-          privacy={draftPrivacy}
-          setPrivacy={setDraftPrivacy}
-          savePrivacy={() => setDialog("privacy")}
-          acknowledged={acknowledged}
-          acknowledge={() => setDialog("allergy")}
-          saveSettings={() => setDialog("settings")}
-          disconnect={() => setDialog("disconnect")}
-        />
-      )}
-
+{profileLoaded && area === "settings" && (
+  <Settings
+    connected={connected}
+    simplified={simplified}
+    setSimplified={setSimplified}
+    dietary={dietary}
+    setDietary={setDietary}
+    allergies={allergies}
+    setAllergies={setAllergies}
+    intolerances={intolerances}
+    setIntolerances={setIntolerances}
+    notifications={notifications}
+    setNotifications={setNotifications}
+    privacy={draftPrivacy}
+    setPrivacy={setDraftPrivacy}
+    savePrivacy={() => setDialog("privacy")}
+    acknowledged={acknowledged}
+    acknowledge={() => setDialog("allergy")}
+    saveSettings={() => setDialog("settings")}
+    disconnect={() => setDialog("disconnect")}
+  />
+)}
+     
       {dialog && (
         <div
           className="dialog-backdrop"
@@ -371,8 +515,7 @@ export function Part2Workspace() {
                     return;
                   }
 
-                  setDialog(null);
-                  setToast("Settings saved successfully.");
+                  void saveProfileSettings();
                 }}
               >
                 {dialog === "allergy"
@@ -654,6 +797,7 @@ function NutritionistDashboard(props: any) {
 }
 
 function ClientProfile({
+  profile,
   privacy,
   allergies,
   intolerances,
@@ -679,13 +823,57 @@ function ClientProfile({
         </div>
       </div>
 
-      <section className="dashboard-card">
-        <h2>Profile information</h2>
-        <p className="empty-message">
-          Your personalised profile information will appear here
-          after onboarding is completed.
-        </p>
-      </section>
+    <section className="dashboard-card">
+  <span className="eyebrow">Profile summary</span>
+  <h2>Your personalised plan</h2>
+
+  {profile ? (
+    <div className="profile-summary-grid">
+      <div>
+        <span>Age</span>
+        <strong>{profile.age ?? "Not provided"}</strong>
+      </div>
+
+      <div>
+        <span>Biological sex</span>
+        <strong>{profile.sex || "Not provided"}</strong>
+      </div>
+
+      <div>
+        <span>Height</span>
+        <strong>
+          {profile.height ? `${profile.height} cm` : "Not provided"}
+        </strong>
+      </div>
+
+      <div>
+        <span>Weight</span>
+        <strong>
+          {profile.weight ? `${profile.weight} kg` : "Not provided"}
+        </strong>
+      </div>
+
+      <div>
+        <span>Activity level</span>
+        <strong>{profile.activityLevel || "Not provided"}</strong>
+      </div>
+
+      <div>
+        <span>Primary goal</span>
+        <strong>{profile.goal || "Not provided"}</strong>
+      </div>
+
+      <div>
+        <span>Preferred language</span>
+        <strong>{profile.language || "Not provided"}</strong>
+      </div>
+    </div>
+  ) : (
+    <p className="empty-message">
+      Complete your nutrition profile to see your personalised plan.
+    </p>
+  )}
+ </section>
 
       {canSee("Meal History") && (
         <section className="dashboard-card">
