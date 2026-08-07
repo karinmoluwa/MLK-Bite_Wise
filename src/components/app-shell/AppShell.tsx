@@ -1,25 +1,53 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { primaryNavigation, secondaryNavigation } from "@/domain/navigation";
+import { onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
+import { getFirebaseAuth } from "@/services/auth/firebase";import { primaryNavigation, secondaryNavigation } from "@/domain/navigation";
 import { SessionManager } from "@/services/auth/session-manager";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tabletCollapsed, setTabletCollapsed] = useState(false);
   const [sessionNotice, setSessionNotice] = useState(false);
+  const [username, setUsername] = useState("User");
 
   useEffect(() => {
     const manager = new SessionManager(() => setSessionNotice(true));
     manager.start();
     return () => manager.stop();
   }, []);
+ useEffect(() => {
+  const auth = getFirebaseAuth();
 
-  const signOut = () => {
-    setSessionNotice(false);
-    setMobileOpen(false);
-    window.location.hash = "signed-out";
-  };
+  if (!auth) return;
+
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      setUsername("User");
+      return;
+    }
+
+    setUsername(
+      user.displayName ||
+      user.email?.split("@")[0] ||
+      "User"
+    );
+  });
+
+  return unsubscribe;
+ }, []);
+  const signOut = async () => {
+  setSessionNotice(false);
+  setMobileOpen(false);
+
+  const auth = getFirebaseAuth();
+
+  if (auth) {
+    await firebaseSignOut(auth);
+  }
+
+  window.location.href = "/login";
+ };
 
   const nav = (items: typeof primaryNavigation) => items.map((item, index) => (
     <a className={`app-nav-link ${index === 0 ? "is-active" : ""}`} href={item.href} key={item.label} onClick={() => setMobileOpen(false)}>
@@ -54,13 +82,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="topbar-leading">
             <button className="icon-button mobile-menu" type="button" aria-label="Open navigation" onClick={() => setMobileOpen(true)}>☰</button>
             <button className="icon-button tablet-toggle" type="button" aria-label="Collapse navigation" onClick={() => setTabletCollapsed((value) => !value)}>☰</button>
-            <div><strong>Good morning, Amara</strong><small>Here is your nutrition overview</small></div>
-          </div>
+<div>
+  <strong>Hi, {username}</strong>
+  <small>Here is your nutrition overview</small>
+</div>          </div>
           <div className="topbar-actions">
             <label className="global-search"><span className="sr-only">Search Bite Wise</span><input type="search" placeholder="Search meals and insights" /></label>
             <button className="icon-button" type="button" aria-label="View notifications">●</button>
-            <button className="profile-button" type="button" aria-label="Open profile menu"><span>AO</span><span className="profile-copy"><strong>Amara</strong><small>Standard user</small></span></button>
-          </div>
+<button
+  className="profile-button"
+  type="button"
+  aria-label="Open profile menu"
+>
+  <span>
+    {username.slice(0, 2).toUpperCase()}
+  </span>
+
+  <span className="profile-copy">
+    <strong>{username}</strong>
+    <small>Standard user</small>
+  </span>
+</button>          </div>
         </header>
 
         <main id="main-content" className="app-main">{children}</main>
