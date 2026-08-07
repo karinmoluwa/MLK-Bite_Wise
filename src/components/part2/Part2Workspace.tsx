@@ -8,7 +8,7 @@ import {
   getFirebaseDatabase,
 } from "@/services/auth/firebase";
 
-import { NutritionWorkspace } from "@/components/dashboard/NutritionWorkspace";
+import { NutritionWorkspace } from "@/components/dashboard/NutritionWorkspace(2)";
 
 type Area =
   | "nutrition"
