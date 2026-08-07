@@ -5,14 +5,23 @@ export default function NutritionPage() {
         <div>
           <span className="eyebrow">Nutrition</span>
           <h1>Your nutrition</h1>
-          <p>Review calories, protein, carbohydrates, fat, fibre and nutrition progress.</p>
+          <p>Track your calories and macronutrients from your logged meals.</p>
         </div>
       </div>
 
-      <section className="dashboard-card">
-        <h2>Nutrition summary</h2>
-        <p>Your nutrition information will update as you log meals.</p>
-      </section>
+      <div className="dashboard-primary-grid">
+        <section className="dashboard-card">
+          <span className="card-kicker">Daily nutrition</span>
+          <h2>Nutrition summary</h2>
+          <p>Your calorie, protein, carbohydrate and fat totals will appear here as you log meals.</p>
+        </section>
+
+        <section className="dashboard-card">
+          <span className="card-kicker">Macronutrients</span>
+          <h2>Daily targets</h2>
+          <p>Protein, carbohydrates and fat are tracked against your daily goals.</p>
+        </section>
+      </div>
     </div>
   );
 }
