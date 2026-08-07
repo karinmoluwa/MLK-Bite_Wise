@@ -79,6 +79,49 @@ const notificationOptions: NotificationKey[] = [
 
 export function Part2Workspace() {
   const [area, setArea] = useState<Area>("nutrition");
+  useEffect(() => {
+  const handleNavigation = () => {
+    const hash = window.location.hash.replace("#", "").toLowerCase();
+
+    switch (hash) {
+      case "dashboard":
+      case "nutrition":
+      case "meal":
+        setArea("nutrition");
+        break;
+
+      case "history":
+      case "client":
+        setArea("client");
+        break;
+
+      case "recommendations":
+      case "insights":
+        setArea("insights");
+        break;
+
+      case "settings":
+      case "notifications":
+        setArea("settings");
+        break;
+
+      case "nutritionist":
+        setArea("nutritionist");
+        break;
+
+      default:
+        setArea("nutrition");
+    }
+  };
+
+  handleNavigation();
+
+  window.addEventListener("hashchange", handleNavigation);
+
+  return () => {
+    window.removeEventListener("hashchange", handleNavigation);
+  };
+ }, []);
   const [role, setRole] = useState<Role>("user");
 
   const [connected, setConnected] = useState(false);
