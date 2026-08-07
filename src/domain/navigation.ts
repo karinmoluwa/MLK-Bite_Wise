@@ -5,15 +5,47 @@ export type NavigationItem = {
 };
 
 export const primaryNavigation: NavigationItem[] = [
-  { label: "Dashboard", href: "#dashboard", icon: "DB" },
-  { label: "Log meal", href: "#meal", icon: "LM" },
-  { label: "Nutrition", href: "#nutrition", icon: "NT" },
-  { label: "History", href: "#history", icon: "HI" },
-  { label: "Recommendations", href: "#recommendations", icon: "RE" },
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: "DB",
+  },
+  {
+    label: "Log meal",
+    href: "/dashboard#meal",
+    icon: "LM",
+  },
+  {
+    label: "Nutrition",
+    href: "/dashboard#nutrition",
+    icon: "NT",
+  },
+  {
+    label: "History",
+    href: "/dashboard#history",
+    icon: "HI",
+  },
+  {
+    label: "Recommendations",
+    href: "/dashboard#recommendations",
+    icon: "RE",
+  },
 ];
 
 export const secondaryNavigation: NavigationItem[] = [
-  { label: "Notifications", href: "#notifications", icon: "NO" },
-  { label: "Settings", href: "#settings", icon: "SE" },
-  { label: "Help", href: "#help", icon: "HE" },
+  {
+    label: "Notifications",
+    href: "/dashboard#notifications",
+    icon: "NO",
+  },
+  {
+    label: "Settings",
+    href: "/dashboard#settings",
+    icon: "SE",
+  },
+  {
+    label: "Help",
+    href: "/dashboard#help",
+    icon: "HE",
+  },
 ];
