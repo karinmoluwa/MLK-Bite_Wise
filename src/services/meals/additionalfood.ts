@@ -2,8 +2,8 @@
  * Bite Wise additional food catalogue
  *
  * IMPORTANT:
- * - Calories in this file are estimates supplied for the Bite Wise catalogue.
- * - Macronutrients are left at 0 where no macro breakdown was supplied.
+ * - Calories and macronutrients in this file are estimates.
+ * - Macronutrients are estimated from calorie distribution by food category.
  * - These records are marked estimated: true so they are not presented
  *   as exact laboratory/USDA values.
  */
@@ -14,33 +14,272 @@ type MacroCategory =
   | "Fat"
   | "Mixed";
 
+type EstimatedMacros = {
+  protein: number;
+  carbohydrates: number;
+  fat: number;
+  fibre: number;
+};
+
+function estimateMacros(
+  name: string,
+  calories: number
+): EstimatedMacros {
+  const food = name.toLowerCase();
+
+  let proteinPercent = 0.15;
+  let carbPercent = 0.50;
+  let fatPercent = 0.35;
+  let fibre = 4;
+
+  /* PURE / MOSTLY CARBOHYDRATE FOODS */
+  if (
+    food.includes("eba") ||
+    food.includes("fufu") ||
+    food.includes("poundo") ||
+    food.includes("semovita") ||
+    food.includes("semolina") ||
+    food.includes("tuwo") ||
+    food.includes("swallow") ||
+    food.includes("starch") ||
+    food.includes("amala") ||
+    food.includes("custard") ||
+    food.includes("basmati") ||
+    food.includes("cornflakes") ||
+    food.includes("couscous")
+  ) {
+    proteinPercent = 0.07;
+    carbPercent = 0.84;
+    fatPercent = 0.09;
+    fibre = food.includes("amala") || food.includes("oat")
+      ? 6
+      : 3;
+  }
+
+  /* RICE / PASTA / NOODLE MEALS */
+  if (
+    food.includes("rice") ||
+    food.includes("spaghetti") ||
+    food.includes("pasta") ||
+    food.includes("noodle") ||
+    food.includes("macaroni")
+  ) {
+    proteinPercent = 0.14;
+    carbPercent = 0.62;
+    fatPercent = 0.24;
+    fibre = 4;
+  }
+
+  /* BEAN-BASED FOODS */
+  if (
+    food.includes("bean") ||
+    food.includes("akara") ||
+    food.includes("moin moin") ||
+    food.includes("moi moi") ||
+    food.includes("gbegiri") ||
+    food.includes("hummus") ||
+    food.includes("adalu") ||
+    food.includes("ewa")
+  ) {
+    proteinPercent = 0.22;
+    carbPercent = 0.48;
+    fatPercent = 0.30;
+    fibre = 8;
+  }
+
+  /* MEAT / FISH / HIGH-PROTEIN FOODS */
+  if (
+    food.includes("suya") ||
+    food.includes("steak") ||
+    food.includes("chicken") ||
+    food.includes("beef") ||
+    food.includes("goat") ||
+    food.includes("catfish") ||
+    food.includes("fish") ||
+    food.includes("kilishi") ||
+    food.includes("pepper soup") ||
+    food.includes("asun")
+  ) {
+    proteinPercent = 0.48;
+    carbPercent = 0.10;
+    fatPercent = 0.42;
+    fibre = 1;
+  }
+
+  /* OILY MEAT DISHES */
+  if (
+    food.includes("nkwobi") ||
+    food.includes("isiewu")
+  ) {
+    proteinPercent = 0.30;
+    carbPercent = 0.08;
+    fatPercent = 0.62;
+    fibre = 1;
+  }
+
+  /* VEGETABLE / LEAFY SOUPS */
+  if (
+    food.includes("edikang") ||
+    food.includes("afang") ||
+    food.includes("oha") ||
+    food.includes("bitterleaf") ||
+    food.includes("okra") ||
+    food.includes("ewedu")
+  ) {
+    proteinPercent = 0.28;
+    carbPercent = 0.18;
+    fatPercent = 0.54;
+    fibre = 7;
+  }
+
+  /* HEAVY NIGERIAN SOUPS */
+  if (
+    food.includes("egusi") ||
+    food.includes("ogbono") ||
+    food.includes("banga")
+  ) {
+    proteinPercent = 0.22;
+    carbPercent = 0.16;
+    fatPercent = 0.62;
+    fibre = 6;
+  }
+
+  /* PLANTAIN / YAM */
+  if (
+    food.includes("plantain") ||
+    food.includes("dodo") ||
+    food.includes("yam") ||
+    food.includes("asaro") ||
+    food.includes("bole") ||
+    food.includes("boli")
+  ) {
+    proteinPercent = 0.08;
+    carbPercent = 0.65;
+    fatPercent = 0.27;
+    fibre = 5;
+  }
+
+  /* BAKED / FRIED SNACKS */
+  if (
+    food.includes("pie") ||
+    food.includes("puff") ||
+    food.includes("chin chin") ||
+    food.includes("croissant") ||
+    food.includes("danish") ||
+    food.includes("samosa") ||
+    food.includes("spring roll") ||
+    food.includes("sausage roll") ||
+    food.includes("gala")
+  ) {
+    proteinPercent = 0.11;
+    carbPercent = 0.53;
+    fatPercent = 0.36;
+    fibre = 2;
+  }
+
+  /* BURGER / SHAWARMA / SANDWICH / PIZZA */
+  if (
+    food.includes("burger") ||
+    food.includes("shawarma") ||
+    food.includes("sandwich") ||
+    food.includes("pizza") ||
+    food.includes("hot dog")
+  ) {
+    proteinPercent = 0.22;
+    carbPercent = 0.40;
+    fatPercent = 0.38;
+    fibre = 3;
+  }
+
+  /* SALADS */
+  if (
+    food.includes("salad") ||
+    food.includes("coleslaw")
+  ) {
+    proteinPercent = 0.10;
+    carbPercent = 0.30;
+    fatPercent = 0.60;
+    fibre = 5;
+  }
+
+  /* OATS */
+  if (food.includes("oat")) {
+    proteinPercent = 0.16;
+    carbPercent = 0.67;
+    fatPercent = 0.17;
+    fibre = 5;
+  }
+
+  /* GUACAMOLE / AVOCADO */
+  if (
+    food.includes("guacamole") ||
+    food.includes("avocado")
+  ) {
+    proteinPercent = 0.07;
+    carbPercent = 0.18;
+    fatPercent = 0.75;
+    fibre = 4;
+  }
+
+  const protein = Math.round(
+    (calories * proteinPercent) / 4
+  );
+
+  const carbohydrates = Math.round(
+    (calories * carbPercent) / 4
+  );
+
+  const fat = Math.round(
+    (calories * fatPercent) / 9
+  );
+
+  return {
+    protein,
+    carbohydrates,
+    fat,
+    fibre,
+  };
+}
+
 const estimatedMeal = (
   id: string,
   name: string,
   calories: number,
   serving: string,
-  cuisine: "Nigerian Cuisine" | "International Cuisine",
+  cuisine:
+    | "Nigerian Cuisine"
+    | "International Cuisine",
   aliases: string[] = [],
   macroCategory: MacroCategory = "Mixed"
-) => ({
-  id,
-  name,
-  cuisine,
-  serving,
-  aliases,
-  macroCategory,
-  estimated: true,
-  confidence: 90,
-  nutrients: {
-    calories,
-    protein: 0,
-    carbohydrates: 0,
-    fat: 0,
-    fibre: 0,
-  },
-  allergens: [] as string[],
-  intolerances: [] as string[],
-});
+) => {
+  const macros = estimateMacros(
+    name,
+    calories
+  );
+
+  return {
+    id,
+    name,
+    cuisine,
+    serving,
+    aliases,
+    macroCategory,
+    estimated: true,
+    confidence: 90,
+
+    nutrients: {
+      calories,
+      protein: macros.protein,
+      carbohydrates:
+        macros.carbohydrates,
+      fat: macros.fat,
+      fibre: macros.fibre,
+    },
+
+    allergens: [] as string[],
+    intolerances: [] as string[],
+  };
+};
 
 /* =========================================================
    50 NIGERIAN FOODS

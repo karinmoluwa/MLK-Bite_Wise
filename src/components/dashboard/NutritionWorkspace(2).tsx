@@ -2,11 +2,11 @@
 
 import {
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type SetStateAction,
 } from "react";
-
 import type {
   Cuisine,
   MacroKey,
@@ -273,29 +273,31 @@ export function NutritionWorkspace() {
   };
 
   const saveMeal = (
-    mealToSave: MealCandidate,
-    source: MealSource = method
-  ) => {
-    const savedMeal: SavedMeal = {
-      ...mealToSave,
-      source,
-      savedAt: new Date().toISOString(),
-      pinned: false,
-    };
-
-    setSavedMeals((items) => [
-      savedMeal,
-      ...items,
-    ]);
-
-    setStatus(
-      `${mealToSave.name} was saved to Meal History.`
-    );
-
-    setView("dashboard");
-    setSelected(null);
-    setSuggestions([]);
+  mealToSave: MealCandidate & { pinned?: boolean },
+  source: MealSource = method
+) => {
+  const savedMeal: SavedMeal = {
+    ...mealToSave,
+    source,
+    savedAt: new Date().toISOString(),
+    pinned: mealToSave.pinned ?? false,
   };
+
+  setSavedMeals((items) => [
+    savedMeal,
+    ...items,
+  ]);
+
+  setStatus(
+    mealToSave.pinned
+      ? `${mealToSave.name} was saved and pinned.`
+      : `${mealToSave.name} was saved to Meal History.`
+  );
+
+  setView("dashboard");
+  setSelected(null);
+  setSuggestions([]);
+};
 
   return (
     <div className="nutrition-app">
@@ -1019,6 +1021,106 @@ function Dashboard(props: any) {
 function MealLogger(props: any) {
   const [textQuery, setTextQuery] =
     useState("");
+    const [voiceText, setVoiceText] = useState("");
+const [isListening, setIsListening] = useState(false);
+const recognitionRef = useRef<any>(null);
+
+const startVoiceRecognition = () => {
+  if (typeof window === "undefined") return;
+
+  const SpeechRecognition =
+    (window as any).SpeechRecognition ||
+    (window as any).webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert(
+      "Voice recognition is not supported in this browser. Try Chrome or Edge."
+    );
+    return;
+  }
+
+  // Stop an old recognition session if one exists.
+  if (recognitionRef.current) {
+    try {
+      recognitionRef.current.stop();
+    } catch {}
+  }
+
+  const recognition = new SpeechRecognition();
+
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = "en-NG";
+
+  recognitionRef.current = recognition;
+
+  recognition.onstart = () => {
+    setIsListening(true);
+    setVoiceText("Listening...");
+  };
+
+  recognition.onresult = (event: any) => {
+    let transcript = "";
+
+    for (
+      let index = event.resultIndex;
+      index < event.results.length;
+      index++
+    ) {
+      transcript += event.results[index][0].transcript;
+    }
+
+    setVoiceText(transcript);
+    setTextQuery(transcript);
+  };
+
+  recognition.onerror = (event: any) => {
+    console.error("Speech recognition error:", event.error);
+
+    setIsListening(false);
+
+    if (event.error === "not-allowed") {
+      setVoiceText(
+        "Microphone permission was denied. Please allow microphone access and try again."
+      );
+      return;
+    }
+
+    if (event.error === "no-speech") {
+      setVoiceText(
+        "I couldn't hear anything. Tap the button and try speaking again."
+      );
+      return;
+    }
+
+    setVoiceText(
+      `Voice recognition error: ${event.error}`
+    );
+  };
+
+  recognition.onend = () => {
+    setIsListening(false);
+    recognitionRef.current = null;
+  };
+
+  try {
+    recognition.start();
+  } catch (error) {
+    console.error(error);
+    setIsListening(false);
+    setVoiceText(
+      "Could not start voice recognition. Please try again."
+    );
+  }
+};
+
+const analyseVoiceMeal = () => {
+  if (!voiceText || voiceText === "Listening...") {
+    return;
+  }
+
+  props.runAnalysis();
+};
 
  const filtered = textQuery.trim()
   ? getClosestMeals(textQuery, 3)
@@ -1192,46 +1294,45 @@ function MealLogger(props: any) {
           </div>
 
           <div className="common-meal-grid">
-            {filtered.map((meal) => (
-              <button
-                type="button"
-                key={meal.id}
-                onClick={() =>
-                  props.chooseCandidate(
-                    meal
-                  )
-                }
-              >
-                <strong>
-                  {meal.name}
-                </strong>
+  {filtered.map((meal) => (
+    <button
+      type="button"
+      key={meal.id}
+      onClick={() => props.chooseCandidate(meal)}
+    >
+      <strong>{meal.name}</strong>
 
-                <span>
-                  {meal.serving}
-                </span>
+      <span>{meal.serving}</span>
 
-                <small>
-                  {
-                    meal.nutrients
-                      .calories
-                  }{" "}
-                  kcal
-                </small>
+      <div className="meal-macro-summary">
+        <strong>
+          {Math.round(meal.nutrients.calories)} kcal
+        </strong>
 
-                {"macroCategory" in meal &&
-                  typeof meal.macroCategory ===
-                    "string" && (
-                    <span
-                      className={`macro-category ${meal.macroCategory.toLowerCase()}`}
-                    >
-                      {
-                        meal.macroCategory
-                      }
-                    </span>
-                  )}
-              </button>
-            ))}
-          </div>
+        <span>
+          P {Math.round(meal.nutrients.protein)}g
+        </span>
+
+        <span>
+          C {Math.round(meal.nutrients.carbohydrates)}g
+        </span>
+
+        <span>
+          F {Math.round(meal.nutrients.fat)}g
+        </span>
+      </div>
+
+      {"macroCategory" in meal &&
+        typeof meal.macroCategory === "string" && (
+          <span
+            className={`macro-category ${meal.macroCategory.toLowerCase()}`}
+          >
+            {meal.macroCategory}
+          </span>
+        )}
+    </button>
+  ))}
+</div>
 
           {textQuery
             .toLowerCase()
@@ -1392,73 +1493,97 @@ function MealLogger(props: any) {
         </section>
       )}
 
-      {props.method === "voice" && (
-        <section className="logging-panel">
-          {!props.voiceExampleSeen && (
-            <div className="voice-example">
-              <button
-                type="button"
-                onClick={() =>
-                  props.setVoiceExampleSeen(
-                    true
-                  )
-                }
-                aria-label="Dismiss example"
-              >
-                ×
-              </button>
+     {props.method === "voice" && (
+  <section className="logging-panel">
+    {!props.voiceExampleSeen && (
+      <div className="voice-example">
+        <button
+          type="button"
+          onClick={() =>
+            props.setVoiceExampleSeen(true)
+          }
+          aria-label="Dismiss example"
+        >
+          ×
+        </button>
 
-              <strong>
-                Try saying:
-              </strong>
+        <strong>Try saying:</strong>
 
-              <p>
-                “I ate one serving of jollof
-                rice with grilled chicken
-                and a small bottle of orange
-                juice.”
-              </p>
-            </div>
-          )}
+        <p>
+          “I ate one serving of jollof rice with grilled
+          chicken and a small bottle of orange juice.”
+        </p>
+      </div>
+    )}
 
-          <div className="voice-zone">
-            <span className="voice-pulse">
-              VO
-            </span>
+    <div className="voice-zone">
+      <span
+        className={`voice-pulse ${
+          isListening ? "is-listening" : ""
+        }`}
+      >
+        {isListening ? "●" : "VO"}
+      </span>
 
-            <h2>
-              {props.voiceSupported
-                ? "Describe your meal naturally"
-                : "Voice recognition is unavailable"}
-            </h2>
+      <h2>
+        {isListening
+          ? "Listening..."
+          : "Describe your meal naturally"}
+      </h2>
 
-            <p>
-              {props.voiceSupported
-                ? "We will convert your speech to text, then ask you to confirm the meal."
-                : "Upload an audio recording instead. Core meal logging remains available."}
-            </p>
+      <p>
+        {isListening
+          ? "Speak now. Bite Wise is listening to your meal description."
+          : "Tap the microphone button and describe what you ate."}
+      </p>
+
+      <button
+        type="button"
+        className="button button-primary"
+        onClick={startVoiceRecognition}
+        disabled={isListening}
+      >
+        {isListening
+          ? "Listening..."
+          : "🎙 Start recording"}
+      </button>
+    </div>
+
+    {voiceText &&
+      voiceText !== "Listening..." && (
+        <div className="voice-transcript">
+          <span className="eyebrow">
+            We heard
+          </span>
+
+          <p>{voiceText}</p>
+
+          <div>
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={startVoiceRecognition}
+            >
+              Try again
+            </button>
 
             <button
               type="button"
               className="button button-primary"
-              onClick={
-                props.runAnalysis
-              }
+              onClick={analyseVoiceMeal}
             >
-              {props.voiceSupported
-                ? "Start recording"
-                : "Upload audio"}
+              Analyse this meal
             </button>
           </div>
-
-          <CandidateList
-            items={props.suggestions}
-            onPick={
-              props.chooseCandidate
-            }
-          />
-        </section>
+        </div>
       )}
+
+    <CandidateList
+      items={props.suggestions}
+      onPick={props.chooseCandidate}
+    />
+  </section>
+)}
     </div>
   );
 }
@@ -1803,24 +1928,35 @@ function MealConfirmation({
       )}
 
       <div className="confirmation-actions">
-        <button
-          type="button"
-          className="button button-secondary"
-          onClick={onCancel}
-        >
-          Cancel
-        </button>
+  <button
+    type="button"
+    className="button button-secondary"
+    onClick={onCancel}
+  >
+    Cancel
+  </button>
 
-        <button
-          type="button"
-          className="button button-primary"
-          onClick={() =>
-            onSave(scaledMeal)
-          }
-        >
-          Confirm and save
-        </button>
-      </div>
+  <button
+    type="button"
+    className="button button-secondary"
+    onClick={() =>
+      onSave({
+        ...scaledMeal,
+        pinned: true,
+      } as MealCandidate)
+    }
+  >
+    📌 Save & pin
+  </button>
+
+  <button
+    type="button"
+    className="button button-primary"
+    onClick={() => onSave(scaledMeal)}
+  >
+    Confirm and save
+  </button>
+</div>
     </div>
   );
 }
