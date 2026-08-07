@@ -210,13 +210,18 @@ export function Part2Workspace() {
 
   try {
     const updatedProfile = {
-      dietaryPreferences: dietary,
-      allergies: allergies.map((item) => ({
-        name: item.name,
-        severity: item.severity.toLowerCase(),
-      })),
-      intolerances,
-    };
+  ...(profile || {}),
+  language: profile?.language || "",
+  cuisinePreference: profile?.cuisinePreference || "",
+  displayName: profile?.displayName || "",
+  dietaryPreferences: dietary,
+  allergies: allergies.map((item) => ({
+    name: item.name,
+    severity: item.severity.toLowerCase(),
+  })),
+  intolerances,
+  updatedAt: new Date().toISOString(),
+ };
 
     await setDoc(
       doc(db, "users", user.uid),
@@ -415,6 +420,8 @@ export function Part2Workspace() {
 
 {profileLoaded && area === "settings" && (
   <Settings
+    profile={profile}
+    setProfile={setProfile}
     connected={connected}
     simplified={simplified}
     setSimplified={setSimplified}
@@ -1041,43 +1048,82 @@ function Settings(props: any) {
           <h2>Account details</h2>
 
           <div className="form-grid">
-            <label>
-              Preferred language
-              <select>
-                <option>English</option>
-                <option>French</option>
-                <option>Yoruba</option>
-                <option>Igbo</option>
-                <option>Hausa</option>
-              </select>
-            </label>
+  <label>
+    Preferred language
+    <select
+value={
+  props.profile?.language === "en"
+    ? "English"
+    : props.profile?.language === "fr"
+    ? "French"
+    : props.profile?.language === "yo"
+    ? "Yoruba"
+    : props.profile?.language === "ig"
+    ? "Igbo"
+    : props.profile?.language === "ha"
+    ? "Hausa"
+    : props.profile?.language || ""
+}      onChange={(event) =>
+        props.setProfile((current: any) => ({
+          ...(current || {}),
+          language: event.target.value,
+        }))
+      }
+    >
+      <option value="">Please select</option>
+      <option value="English">English</option>
+      <option value="French">French</option>
+      <option value="Yoruba">Yoruba</option>
+      <option value="Igbo">Igbo</option>
+      <option value="Hausa">Hausa</option>
+    </select>
+  </label>
 
-            <label>
-              Cuisine preference
-              <select>
-                <option value="">
-                  Select cuisine preference
-                </option>
-                <option>Nigerian Cuisine</option>
-                <option>International Cuisine</option>
-              </select>
-            </label>
+  <label>
+    Cuisine preference
+    <select
+      value={props.profile?.cuisinePreference || ""}
+      onChange={(event) =>
+        props.setProfile((current: any) => ({
+          ...(current || {}),
+          cuisinePreference: event.target.value,
+        }))
+      }
+    >
+      <option value="">Please select</option>
+      <option value="Nigerian Cuisine">
+        Nigerian Cuisine
+      </option>
+      <option value="International Cuisine">
+        International Cuisine
+      </option>
+    </select>
+  </label>
 
-            <label>
-              Display name
-              <input
-                placeholder="Your display name"
-              />
-            </label>
+  <label>
+    Display name
+    <input
+      type="text"
+      value={props.profile?.displayName || ""}
+      onChange={(event) =>
+        props.setProfile((current: any) => ({
+          ...(current || {}),
+          displayName: event.target.value,
+        }))
+      }
+      placeholder="Your display name"
+    />
+  </label>
 
-            <label>
-              Password
-              <input
-                type="password"
-                placeholder="Enter a new password"
-              />
-            </label>
-          </div>
+  <label>
+    Password
+    <input
+      type="password"
+      placeholder="Enter a new password"
+      autoComplete="new-password"
+    />
+  </label>
+ </div>
         </section>
 
         <section className="dashboard-card">

@@ -631,3 +631,346 @@ button { cursor: pointer; }
 @media (display-mode:standalone){body{overscroll-behavior-y:contain}}
 
 .error-state,.loading-state{min-height:55vh;display:grid;place-content:center;text-align:center;gap:1rem;padding:2rem}.loading-spinner{width:42px;height:42px;border:4px solid #dcece4;border-top-color:#176f45;border-radius:50%;animation:bw-spin .8s linear infinite;margin:auto}@keyframes bw-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.loading-spinner{animation:none}}
+/* =========================================================
+   BITE WISE — FINAL UI COMPLETION STYLES
+   ========================================================= */
+
+/* Keep all form controls visually consistent */
+select,
+textarea,
+input {
+  font: inherit;
+}
+
+select {
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--green-500) !important;
+  box-shadow: 0 0 0 3px rgb(39 136 86 / 0.12);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #87958c;
+}
+
+/* Settings account/profile fields */
+.settings-page .form-grid label {
+  min-width: 0;
+  color: var(--text);
+}
+
+.settings-page .form-grid input,
+.settings-page .form-grid select {
+  background: var(--white);
+}
+
+.settings-page .form-grid select {
+  appearance: auto;
+}
+
+/* Profile summary populated from onboarding */
+.profile-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.profile-summary-grid > div {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.profile-summary-grid span {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.profile-summary-grid strong {
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 0.98rem;
+}
+
+/* Allergy and intolerance distinction */
+.safety-tag {
+  gap: 6px;
+  border: 1px solid #e6c977;
+  background: #fff7df;
+  color: #6c4d0d;
+}
+
+.safety-tag::before {
+  content: "!";
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.safety-tag.severe {
+  border-color: #e3a49e;
+  background: #fdebea;
+  color: #8c2f26;
+}
+
+.safety-tag.moderate {
+  border-color: #e6c977;
+  background: #fff5dc;
+  color: #765413;
+}
+
+.safety-tag.mild {
+  border-color: #b9d8c2;
+  background: #edf7ef;
+  color: #315d3f;
+}
+
+.intolerance-tag {
+  gap: 6px;
+  border: 1px solid #c9dceb;
+  background: #edf6fc;
+  color: #315c78;
+}
+
+.intolerance-tag::before {
+  content: "i";
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #d8eaf5;
+  color: #315c78;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+/* Make high-risk allergy information visually prominent */
+.safety-summary {
+  border: 1px solid #ead18f;
+}
+
+.safety-summary strong {
+  color: var(--text);
+}
+
+/* Persistent incomplete-profile reminder */
+.reminder-banner {
+  box-shadow: 0 3px 12px rgb(138 91 18 / 0.06);
+}
+
+.reminder-banner strong {
+  color: #68440c;
+}
+
+.reminder-banner .button {
+  flex: 0 0 auto;
+}
+
+/* Validation */
+[aria-invalid="true"] {
+  border-color: var(--error) !important;
+  background: #fffafa !important;
+}
+
+[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px rgb(180 35 24 / 0.12);
+}
+
+.field-error {
+  display: block;
+  margin-top: 2px;
+  color: var(--error) !important;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.form-summary {
+  line-height: 1.45;
+}
+
+/* Buttons */
+.button {
+  white-space: nowrap;
+}
+
+.button-primary {
+  box-shadow: 0 3px 10px rgb(23 111 69 / 0.12);
+}
+
+.button-primary:hover {
+  box-shadow: 0 5px 14px rgb(23 111 69 / 0.18);
+}
+
+.button-secondary:hover {
+  background: var(--green-50);
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--green-300);
+  outline-offset: 2px;
+}
+
+/* Checkbox/radio consistency */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--green-600);
+}
+
+/* Switch rows */
+.switch-row {
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.switch-row:hover {
+  border-color: var(--green-200);
+  background: var(--green-50);
+}
+
+.switch-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* Range sliders */
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--green-600);
+  cursor: pointer;
+}
+
+/* Dropdowns */
+.form-grid select,
+.form-stack select,
+.form-inline select,
+.cuisine-control select,
+.logger-controls select,
+.module-switcher select,
+.filter-row select {
+  cursor: pointer;
+}
+
+/* Toast */
+.app-toast {
+  animation: bitewise-toast-in 180ms ease-out;
+}
+
+@keyframes bitewise-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dialog polish */
+.dialog-backdrop {
+  backdrop-filter: blur(3px);
+}
+
+.confirmation-dialog,
+.session-dialog {
+  border: 1px solid var(--border);
+}
+
+/* Prevent long names/data breaking cards */
+.profile-copy strong,
+.client-table strong,
+.dashboard-card strong {
+  overflow-wrap: anywhere;
+}
+
+/* Mobile/tablet completion */
+@media (max-width: 900px) {
+  .profile-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .profile-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-page .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reminder-banner .button {
+    width: 100%;
+  }
+
+  .form-inline {
+    flex-direction: column;
+  }
+
+  .form-inline input,
+  .form-inline select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-card {
+    padding: 16px;
+  }
+
+  .profile-summary-grid > div {
+    padding: 13px;
+  }
+
+  .button {
+    min-height: 46px;
+  }
+
+  .app-toast {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    max-width: none;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .app-toast {
+    animation: none;
+  }
+}
