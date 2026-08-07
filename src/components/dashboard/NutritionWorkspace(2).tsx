@@ -134,14 +134,49 @@ const initialReminders: {
   id: number;
   title: string;
   text: string;
-}[] = [];
+}[] = [
+  {
+    id: 1,
+    title: "Log your next meal",
+    text: "Keep today’s nutrition totals accurate by logging your next meal.",
+  },
+  {
+    id: 2,
+    title: "Review your portions",
+    text: "Use the portion controls before saving a meal so calories match what you ate.",
+  },
+  {
+    id: 3,
+    title: "Check your favourites",
+    text: "Pin meals you eat often for faster logging later.",
+  },
+];
 
 const initialNotifications: {
   id: number;
   title: string;
   text: string;
   unread: boolean;
-}[] = [];
+}[] = [
+  {
+    id: 1,
+    title: "Food catalogue updated",
+    text: "More Nigerian meals, swallows, oils, and seasonings are now available.",
+    unread: true,
+  },
+  {
+    id: 2,
+    title: "Portion controls are active",
+    text: "Increase or reduce portions before saving a meal and calories will scale automatically.",
+    unread: true,
+  },
+  {
+    id: 3,
+    title: "Search is smarter",
+    text: "Meal search now shows the three closest matches instead of a long list.",
+    unread: false,
+  },
+];
 
 export function NutritionWorkspace() {
   const [view, setView] = useState<View>("dashboard");
@@ -192,7 +227,27 @@ export function NutritionWorkspace() {
   );
 
   const goal = 2100;
-  const remaining = goal - consumed;
+  const remaining = Math.max(0, goal - consumed);
+
+  const macroTotals = useMemo(
+    () => ({
+      Protein: Math.round(
+        savedMeals.reduce((total, meal) => total + meal.nutrients.protein, 0)
+      ),
+      Carbohydrates: Math.round(
+        savedMeals.reduce(
+          (total, meal) => total + meal.nutrients.carbohydrates,
+          0
+        )
+      ),
+      Fat: Math.round(
+        savedMeals.reduce((total, meal) => total + meal.nutrients.fat, 0)
+      ),
+    }),
+    [savedMeals]
+  );
+
+  const unreadCount = notifications.filter((item) => item.unread).length;
 
   const caloriePercent =
     goal > 0
@@ -376,29 +431,39 @@ export function NutritionWorkspace() {
           remaining={remaining}
           macro={macro}
           setMacro={setMacro}
+          macroTotals={macroTotals}
+          savedMealsCount={savedMeals.length}
+          unreadCount={unreadCount}
           reminders={reminders}
           dismissReminder={(id: number) =>
-            setReminders((items) =>
-              items.filter(
-                (item) => item.id !== id
-              )
-            )
+            setReminders((items) => items.filter((item) => item.id !== id))
+          }
+          addReminder={() =>
+            setReminders((items) => [
+              ...items,
+              {
+                id: Date.now(),
+                title: "Log a meal",
+                text: "Open Meal Logging when you are ready to add your next meal.",
+              },
+            ])
           }
           notifications={notifications}
           markRead={(id: number) =>
             setNotifications((items) =>
               items.map((item) =>
-                item.id === id
-                  ? {
-                      ...item,
-                      unread: false,
-                    }
-                  : item
+                item.id === id ? { ...item, unread: false } : item
               )
+            )
+          }
+          markAllRead={() =>
+            setNotifications((items) =>
+              items.map((item) => ({ ...item, unread: false }))
             )
           }
           cuisine={cuisine}
           onLog={() => setView("log")}
+          onFavourites={() => setView("favourites")}
           onPick={chooseCandidate}
         />
       )}
@@ -447,8 +512,10 @@ export function NutritionWorkspace() {
 }
 
 function Dashboard(props: any) {
-  const macroInfo =
-    macroData[props.macro as MacroKey];
+  const selectedMacro = props.macro as MacroKey;
+  const macroInfo = macroData[selectedMacro];
+  const selectedCurrent = props.macroTotals[selectedMacro] ?? 0;
+  const selectedRemaining = Math.max(0, macroInfo.goal - selectedCurrent);
 
   const circumference =
     2 * Math.PI * 54;
@@ -604,9 +671,7 @@ function Dashboard(props: any) {
                 </div>
 
                 <div className="macro-buttons">
-                  {Object.entries(
-                    macroData
-                  ).map(
+                  {Object.entries(macroData).map(
                     ([name, item]) => (
                       <button
                         type="button"
@@ -640,7 +705,7 @@ function Dashboard(props: any) {
                         </span>
 
                         <strong>
-                          {item.current}
+                          {props.macroTotals[name as MacroKey] ?? 0}
                           {item.unit}
                         </strong>
                       </button>
@@ -655,22 +720,15 @@ function Dashboard(props: any) {
                 </strong>
 
                 <span>
-                  Current{" "}
-                  {macroInfo.current}
-                  {macroInfo.unit}
+                  Current {selectedCurrent}{macroInfo.unit}
                 </span>
 
                 <span>
-                  Recommended{" "}
-                  {macroInfo.goal}
-                  {macroInfo.unit}
+                  Recommended {macroInfo.goal}{macroInfo.unit}
                 </span>
 
                 <span>
-                  Remaining{" "}
-                  {macroInfo.goal -
-                    macroInfo.current}
-                  {macroInfo.unit}
+                  Remaining {selectedRemaining}{macroInfo.unit}
                 </span>
               </div>
             </article>
@@ -734,11 +792,46 @@ function Dashboard(props: any) {
                 </div>
               </div>
 
-              <p className="empty-message">
-                More detailed insights will
-                appear as you continue
-                logging meals.
-              </p>
+              {props.savedMealsCount === 0 ? (
+                <div className="empty-message">
+                  <p>Log a meal to unlock personalised calorie and macro insights.</p>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={props.onLog}
+                  >
+                    Log a meal
+                  </button>
+                </div>
+              ) : (
+                <div className="insight-actions">
+                  <p>
+                    You have logged <strong>{props.savedMealsCount}</strong>{" "}
+                    {props.savedMealsCount === 1 ? "meal" : "meals"} today.
+                  </p>
+                  <p>
+                    {props.remaining > 0
+                      ? `${props.remaining} kcal remain in your current daily goal.`
+                      : "You have reached your current daily calorie goal."}
+                  </p>
+                  <div>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={props.onLog}
+                    >
+                      Log another meal
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={props.onFavourites}
+                    >
+                      View favourites
+                    </button>
+                  </div>
+                </div>
+              )}
             </section>
 
             <section className="dashboard-card">
@@ -806,9 +899,14 @@ function Dashboard(props: any) {
                 Reminders
               </span>
 
-              <h2>
-                Helpful next steps
-              </h2>
+              <h2>Helpful next steps</h2>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={props.addReminder}
+              >
+                + Add reminder
+              </button>
             </div>
           </div>
 
@@ -860,9 +958,19 @@ function Dashboard(props: any) {
                 Notifications
               </span>
 
-              <h2>
-                Recent updates
-              </h2>
+              <h2>Recent updates</h2>
+              <div className="notification-tools">
+                <span>{props.unreadCount} unread</span>
+                {props.unreadCount > 0 && (
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={props.markAllRead}
+                  >
+                    Mark all read
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
