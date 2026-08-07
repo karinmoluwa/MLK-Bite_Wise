@@ -12,22 +12,22 @@ export const primaryNavigation: NavigationItem[] = [
   },
   {
     label: "Log meal",
-    href: "/dashboard#meal",
+    href: "/meal-log",
     icon: "LM",
   },
   {
     label: "Nutrition",
-    href: "/dashboard#nutrition",
+    href: "/nutrition",
     icon: "NT",
   },
   {
     label: "History",
-    href: "/dashboard#history",
+    href: "/history",
     icon: "HI",
   },
   {
     label: "Recommendations",
-    href: "/dashboard#recommendations",
+    href: "/recommendations",
     icon: "RE",
   },
 ];
@@ -35,17 +35,17 @@ export const primaryNavigation: NavigationItem[] = [
 export const secondaryNavigation: NavigationItem[] = [
   {
     label: "Notifications",
-    href: "/dashboard#notifications",
+    href: "/notifications",
     icon: "NO",
   },
   {
     label: "Settings",
-    href: "/dashboard#settings",
+    href: "/settings",
     icon: "SE",
   },
   {
     label: "Help",
-    href: "/dashboard#help",
+    href: "/help",
     icon: "HE",
   },
 ];
